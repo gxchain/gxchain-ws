@@ -54,6 +54,8 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
 
     Map<Integer, Response> socketMap = new HashMap();
 
+    private BroadcastCallBack broadcastCallBack = new BroadcastCallBack();
+
     public GxchainWebSocketClientImpl(String wsUrl) {
         Dispatcher d = new Dispatcher();
         d.setMaxRequestsPerHost(100);
@@ -63,10 +65,7 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
 
     @Override
     public void close() {
-        final int code = 1000;
-        listener.onClosing(webSocket, code, null);
-        webSocket.close(code, null);
-        listener.onClosed(webSocket, code, null);
+        resetConnect();
         client.dispatcher().executorService().shutdown();
     }
 
@@ -74,6 +73,8 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
     public void resetConnect() {
         final int code = 1000;
         isConnect = false;
+        isLogin = false;
+        broadcastApiId = null;
         listener.onClosing(webSocket, code, null);
         webSocket.close(code, null);
         listener.onClosed(webSocket, code, null);
@@ -173,30 +174,7 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
 
     @Override
     public WitnessResponse<JsonElement> broadcastTransaction(Transaction blockTransaction) {
-
-
-        this.connect((WebSocket webSocket, WitnessResponse<JsonElement> witnessResponse) -> {
-            log.info(WsGsonUtil.toJson(witnessResponse));
-
-            Response response = socketMap.get((int) witnessResponse.getId());
-
-            BeanUtils.copyProperties(witnessResponse, response.witnessResponse);
-            if (witnessResponse.error != null) {
-                log.error(WsGsonUtil.toJson(witnessResponse.error));
-                response.latch.countDown();
-                return;
-            }
-            if (witnessResponse.getId() == 1) {
-                isLogin = true;
-                response.latch.countDown();
-            } else if (witnessResponse.getId() == 3) {
-                broadcastApiId = witnessResponse.getResult().getAsInt();
-                response.latch.countDown();
-            } else if (witnessResponse.getId() >= 6) {
-                log.info(witnessResponse.getId() + " broadcast success");
-                response.latch.countDown();
-            }
-        });
+        this.connect(broadcastCallBack);
 
         Response response = new Response();
         int seq = seqIncr();
@@ -205,7 +183,7 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
 
         latchAwait(response.latch);
 
-        if (response.witnessResponse.getId() < 6) {
+        if (response.witnessResponse.getId() <= 6) {
             response.witnessResponse.error = new BaseResponse.Error("time out, broadcast fail");
         }
         socketMap.remove(seq);
@@ -234,8 +212,35 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
         return seq;
     }
 
-    class Response {
+    private class Response {
         WitnessResponse<JsonElement> witnessResponse = new WitnessResponse();
         CountDownLatch latch = new CountDownLatch(1);
+    }
+
+    private class BroadcastCallBack implements GxchainApiCallback<WitnessResponse<JsonElement>>{
+
+        @Override
+        public void onResponse(WebSocket webSocket, WitnessResponse<JsonElement> witnessResponse) {
+            log.info(WsGsonUtil.toJson(witnessResponse));
+
+            Response response = socketMap.get((int) witnessResponse.getId());
+
+            BeanUtils.copyProperties(witnessResponse, response.witnessResponse);
+            if (witnessResponse.error != null) {
+                log.error(WsGsonUtil.toJson(witnessResponse.error));
+                response.latch.countDown();
+                return;
+            }
+            if (witnessResponse.getId() == 1) {
+                isLogin = true;
+                response.latch.countDown();
+            } else if (witnessResponse.getId() == 3) {
+                broadcastApiId = witnessResponse.getResult().getAsInt();
+                response.latch.countDown();
+            } else if (witnessResponse.getId() > 6) {
+                log.info(witnessResponse.getId() + " broadcast success");
+                response.latch.countDown();
+            }
+        }
     }
 }
