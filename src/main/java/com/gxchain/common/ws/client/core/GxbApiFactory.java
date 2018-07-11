@@ -42,6 +42,8 @@ public class GxbApiFactory {
             }
 
         }).writeTimeout(timeout, TimeUnit.MILLISECONDS).build();
+        httpClient.dispatcher().setMaxRequestsPerHost(100);
+        httpClient.dispatcher().setMaxRequests(150);
 
         retrofit = new Retrofit.Builder().baseUrl(baseUrl).addConverterFactory(GxbGsonConverterFactory.create()).callFactory(httpClient).build();
     }
