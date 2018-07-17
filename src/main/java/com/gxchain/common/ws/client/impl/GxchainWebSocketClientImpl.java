@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import com.gxchain.common.ws.client.GxchainApiCallback;
 import com.gxchain.common.ws.client.GxchainWebSocketClient;
 import com.gxchain.common.ws.client.GxchainWebSocketListener;
+import com.gxchain.common.ws.client.exception.SocketConnectFailException;
 import com.gxchain.common.ws.client.graphenej.RPC;
 import com.gxchain.common.ws.client.graphenej.models.ApiCall;
 import com.gxchain.common.ws.client.graphenej.models.BaseResponse;
@@ -65,7 +66,10 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
 
     @Override
     public void close() {
-        resetConnect();
+        final int code = 1000;
+        listener.onClosing(webSocket, code, null);
+        webSocket.close(code, null);
+        listener.onClosed(webSocket, code, null);
         client.dispatcher().executorService().shutdown();
     }
 
@@ -99,11 +103,19 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
      *
      * @param apiCall
      */
-    private void send(ApiCall apiCall) {
+    private Response send(ApiCall apiCall) {
         if (webSocket == null) {
             throw new NullPointerException("webSocket is null,create webSocket first please");
         }
-        webSocket.send(apiCall.toJsonString());
+        Response response = new Response();
+        socketMap.put(apiCall.sequenceId, response);
+        boolean isSuccess = webSocket.send(apiCall.toJsonString());
+        if(!isSuccess){
+            throw new SocketConnectFailException("connect gxchain node fail");
+        }
+        latchAwait(response.latch);
+        socketMap.remove(apiCall.sequenceId);
+        return response;
     }
 
     /**
@@ -111,7 +123,7 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
      *
      * @param callback
      */
-    private void connect(GxchainApiCallback<WitnessResponse<JsonElement>> callback) {
+    private synchronized void connect(GxchainApiCallback<WitnessResponse<JsonElement>> callback) {
         if (isConnect) {
             return;
         }
@@ -126,9 +138,6 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
         if (isLogin) {
             return;
         }
-        Response response = new Response();
-        socketMap.put(1, response);
-
         ArrayList<Serializable> loginParams = new ArrayList<>();
         loginParams.add("");//用户名 默认为空
         loginParams.add("");//密码 默认为空
@@ -143,13 +152,9 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
         if (broadcastApiId != null) {
             return;
         }
-        Response response = new Response();
-        socketMap.put(3, response);
-
         ArrayList<Serializable> emptyParams = new ArrayList<>();
         ApiCall apiCall = new ApiCall(1, RPC.CALL_NETWORK_BROADCAST, emptyParams, RPC.VERSION, 3);
         send(apiCall);
-        latchAwait(response.latch);
     }
 
     /**
@@ -157,7 +162,11 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
      *
      * @param blockTransaction
      */
-    private void broadcast(Transaction blockTransaction, int seq) {
+    private Response broadcast(Transaction blockTransaction) {
+        if(!isConnect){
+            this.connect(broadcastCallBack);
+        }
+
         if (!isLogin) {
             login();
         }
@@ -167,26 +176,17 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
 
         ArrayList<Serializable> params = new ArrayList<>();
         params.add(blockTransaction);
-        ApiCall apiCall = new ApiCall(broadcastApiId, RPC.BROADCAST_TRANSACTION, params, RPC.VERSION, seq);
-        send(apiCall);
+        ApiCall apiCall = new ApiCall(broadcastApiId, RPC.BROADCAST_TRANSACTION, params, RPC.VERSION, seqIncr());
+        return send(apiCall);
     }
 
 
     @Override
     public WitnessResponse<JsonElement> broadcastTransaction(Transaction blockTransaction) {
-        this.connect(broadcastCallBack);
-
-        Response response = new Response();
-        int seq = seqIncr();
-        socketMap.put(seq, response);
-        broadcast(blockTransaction, seq);
-
-        latchAwait(response.latch);
-
+        Response response = broadcast(blockTransaction);
         if (response.witnessResponse.getId() <= 6) {
             response.witnessResponse.error = new BaseResponse.Error("time out, broadcast fail");
         }
-        socketMap.remove(seq);
         return response.witnessResponse;
     }
 
@@ -217,7 +217,7 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
         CountDownLatch latch = new CountDownLatch(1);
     }
 
-    private class BroadcastCallBack implements GxchainApiCallback<WitnessResponse<JsonElement>>{
+    private class BroadcastCallBack implements GxchainApiCallback<WitnessResponse<JsonElement>> {
 
         @Override
         public void onResponse(WebSocket webSocket, WitnessResponse<JsonElement> witnessResponse) {

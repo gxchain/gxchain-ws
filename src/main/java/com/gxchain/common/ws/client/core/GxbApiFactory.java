@@ -3,6 +3,7 @@ package com.gxchain.common.ws.client.core;
 
 import com.gxchain.common.ws.client.constant.WSConstants;
 import com.gxchain.common.ws.client.exception.GxchainApiException;
+import com.gxchain.common.ws.client.exception.HttpAccessFailException;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
@@ -35,7 +36,7 @@ public class GxbApiFactory {
                 Response response = chain.proceed(chain.request());
                 logger.info("gxb response:" + response.toString());
                 if (!response.isSuccessful()) {
-                    throw new GxchainApiException(response.body().string());
+                    throw new HttpAccessFailException(response.body().string());
                 } else {
                     return response;
                 }
