@@ -176,6 +176,7 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
 
         ArrayList<Serializable> params = new ArrayList<>();
         params.add(blockTransaction);
+        log.info("json:{}",blockTransaction.toJsonString());
         ApiCall apiCall = new ApiCall(broadcastApiId, RPC.BROADCAST_TRANSACTION, params, RPC.VERSION, seqIncr());
         return send(apiCall);
     }

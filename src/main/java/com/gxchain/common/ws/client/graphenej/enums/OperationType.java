@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public enum OperationType {
     TRANSFER_OPERATION(0,"转账"),
+    DIY_OPERATION(35,"自定义操作"),
     BROADCAST_STORE_DATA(73,"数据存储广播"),
 
 
