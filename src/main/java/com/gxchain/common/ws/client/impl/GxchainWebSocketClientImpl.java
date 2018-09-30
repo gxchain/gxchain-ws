@@ -71,6 +71,11 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
         webSocket.close(code, null);
         listener.onClosed(webSocket, code, null);
         client.dispatcher().executorService().shutdown();
+        webSocket = null;
+        listener = null;
+        client = null;
+        socketMap = null;
+        broadcastCallBack = null;
     }
 
     @Override
@@ -110,7 +115,7 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
         Response response = new Response();
         socketMap.put(apiCall.sequenceId, response);
         boolean isSuccess = webSocket.send(apiCall.toJsonString());
-        if(!isSuccess){
+        if (!isSuccess) {
             throw new SocketConnectFailException("connect gxchain node fail");
         }
         latchAwait(response.latch);
@@ -123,38 +128,44 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
      *
      * @param callback
      */
-    private synchronized void connect(GxchainApiCallback<WitnessResponse<JsonElement>> callback) {
-        if (isConnect) {
-            return;
+    private void connect(GxchainApiCallback<WitnessResponse<JsonElement>> callback) {
+        synchronized (this) {
+            if (isConnect) {
+                return;
+            }
+            createNewWebSocket(wsUrl, new GxchainWebSocketListener<>(callback, new TypeToken<WitnessResponse<JsonElement>>() {
+            }.getType()));
         }
-        createNewWebSocket(wsUrl, new GxchainWebSocketListener<>(callback, new TypeToken<WitnessResponse<JsonElement>>() {
-        }.getType()));
     }
 
     /**
      * 登录
      */
-    private synchronized void login() {
-        if (isLogin) {
-            return;
+    private void login() {
+        synchronized (this) {
+            if (isLogin) {
+                return;
+            }
+            ArrayList<Serializable> loginParams = new ArrayList<>();
+            loginParams.add("");//用户名 默认为空
+            loginParams.add("");//密码 默认为空
+            ApiCall apiCall = new ApiCall(1, RPC.CALL_LOGIN, loginParams, RPC.VERSION, 1);
+            send(apiCall);
         }
-        ArrayList<Serializable> loginParams = new ArrayList<>();
-        loginParams.add("");//用户名 默认为空
-        loginParams.add("");//密码 默认为空
-        ApiCall apiCall = new ApiCall(1, RPC.CALL_LOGIN, loginParams, RPC.VERSION, 1);
-        send(apiCall);
     }
 
     /**
      * 获取network broadcast 的 api id
      */
-    private synchronized void networkBroadcast() {
-        if (broadcastApiId != null) {
-            return;
+    private void networkBroadcast() {
+        synchronized (this) {
+            if (broadcastApiId != null) {
+                return;
+            }
+            ArrayList<Serializable> emptyParams = new ArrayList<>();
+            ApiCall apiCall = new ApiCall(1, RPC.CALL_NETWORK_BROADCAST, emptyParams, RPC.VERSION, 3);
+            send(apiCall);
         }
-        ArrayList<Serializable> emptyParams = new ArrayList<>();
-        ApiCall apiCall = new ApiCall(1, RPC.CALL_NETWORK_BROADCAST, emptyParams, RPC.VERSION, 3);
-        send(apiCall);
     }
 
     /**
@@ -163,7 +174,7 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
      * @param blockTransaction
      */
     private Response broadcast(Transaction blockTransaction) {
-        if(!isConnect){
+        if (!isConnect) {
             this.connect(broadcastCallBack);
         }
 
@@ -203,13 +214,15 @@ public class GxchainWebSocketClientImpl implements GxchainWebSocketClient {
         }
     }
 
-    private synchronized int seqIncr() {
-        if (Integer.MAX_VALUE == seq) {
-            seq = 7;
-        } else {
-            seq++;
+    private int seqIncr() {
+        synchronized (this) {
+            if (Integer.MAX_VALUE == seq) {
+                seq = 7;
+            } else {
+                seq++;
+            }
+            return seq;
         }
-        return seq;
     }
 
     private class Response {
