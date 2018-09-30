@@ -67,7 +67,7 @@ public class GxchainWebSocketClientImplTest {
 
         DiyOperation diyOperation = new DiyOperation();
         diyOperation.setD(0);
-        diyOperation.setData("Welcome to BeJson.COM!");
+        diyOperation.setData("Welcome to BeJson.COM!Welcome to BeJson.COM!Welcome to BeJson.COM!Welcome to BeJson.COM!Welcome to BeJson.COM!Welcome to BeJson.COM!Welcome to BeJson.COM!Welcome to BeJson.COM!Welcome to BeJson.COM!Welcome to BeJson.COM!Welcome to BeJson.COM!Welcome to BeJson.COM!Welcome to BeJson.COM!Welcome to BeJson.COM!Welcome to BeJson.COM!Welcome to BeJson.COM!");
         diyOperation.setPayer(new UserAccount("1.2.393"));
         diyOperation.setRequiredAuths(new Extensions());
 

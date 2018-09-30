@@ -37,16 +37,8 @@ public class DiyOperation extends BaseOperation {
         byte[] payerBytes = payer.toBytes();
         byte[] requireAuthsBytes = requiredAuths.toBytes();
         byte[] idBytes = Varint.writeUnsignedSize(d);
-        byte[] dataPrefix = new byte[]{(byte) data.getBytes().length};
+        byte[] dataPrefix = Varint.writeUnsignedVarInt(data.getBytes().length);
         byte[] dataBytes = data.getBytes();
-        System.out.println();
-        System.out.println("feeBytes:" + Util.bytesToHex(feeBytes));
-        System.out.println("payerBytes:" + Util.bytesToHex(payerBytes));
-        System.out.println("requireAuthBytes:" + Util.bytesToHex(requireAuthsBytes));
-        System.out.println("idBytes:" + Util.bytesToHex(idBytes));
-        System.out.println("dataPrefix:" + Util.bytesToHex(dataPrefix));
-        System.out.println("dataBytes:" + Util.bytesToHex(dataBytes));
-        System.out.println();
         return Bytes.concat(feeBytes, payerBytes, requireAuthsBytes, idBytes, dataPrefix, dataBytes);
     }
 
