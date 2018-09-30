@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -42,7 +44,12 @@ public class GxbApiFactory {
                 }
             }
 
-        }).writeTimeout(timeout, TimeUnit.MILLISECONDS).build();
+        }).writeTimeout(timeout, TimeUnit.MILLISECONDS).hostnameVerifier(new HostnameVerifier(){
+            @Override
+            public boolean verify(String hostname, SSLSession session) {
+                return true;
+            }
+        }).build();
         httpClient.dispatcher().setMaxRequestsPerHost(100);
         httpClient.dispatcher().setMaxRequests(150);
 
