@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 public class GxbApiFactory {
     private static final Logger logger = LoggerFactory.getLogger(GxbApiFactory.class);
-    private static final ConcurrentHashMap<Class<?>, Object> typeCache = new ConcurrentHashMap<Class<?>, Object>();
+    private ConcurrentHashMap<Class<?>, Object> typeCache = new ConcurrentHashMap<>();
 
     private Retrofit retrofit;
 
