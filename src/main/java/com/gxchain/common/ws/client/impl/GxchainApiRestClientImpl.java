@@ -46,12 +46,12 @@ public class GxchainApiRestClientImpl implements GxchainApiRestClient {
 
     @Override
     public String getChainId() {
-        if(StringUtils.isNotBlank(chainId)){
+        if (StringUtils.isNotBlank(chainId)) {
             return chainId;
         }
         ArrayList<Serializable> emptyParams = new ArrayList<>();
         ApiCall apiCall = new ApiCall(0, RPC.CALL_GET_CHAIN_ID, emptyParams, RPC.VERSION, 0);
-        return execute(apiCall).replace("\"","");
+        return execute(apiCall).replace("\"", "");
     }
 
     @Override
@@ -105,10 +105,27 @@ public class GxchainApiRestClientImpl implements GxchainApiRestClient {
         }.getType());
     }
 
-    public Block getBlock(long blockHeight){
+    @Override
+    public Block getBlock(long blockHeight) {
         ArrayList<Serializable> accountParams = new ArrayList<>();
         accountParams.add(blockHeight);
         ApiCall apiCall = new ApiCall(0, RPC.CALL_GET_BLOCK, accountParams, RPC.VERSION, 0);
         return WsGsonUtil.fromJson(execute(apiCall), Block.class);
+    }
+
+    @Override
+    public JsonElement getObjects(List<String> objectIds) {
+        if (objectIds == null || objectIds.isEmpty()) {
+            return null;
+        }
+        ArrayList<Serializable> params = new ArrayList<>();
+        ArrayList<Serializable> params2 = new ArrayList<>();
+        for (String objectId : objectIds) {
+            params2.add(objectId);
+        }
+        params.add(params2);
+
+        ApiCall apiCall = new ApiCall(0, RPC.GET_OBJECTS, params, RPC.VERSION, 0);
+        return WsGsonUtil.fromJson(execute(apiCall), JsonElement.class);
     }
 }

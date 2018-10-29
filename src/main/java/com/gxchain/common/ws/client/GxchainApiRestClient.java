@@ -1,5 +1,6 @@
 package com.gxchain.common.ws.client;
 
+import com.google.gson.JsonElement;
 import com.gxchain.common.ws.client.graphenej.models.AccountProperties;
 import com.gxchain.common.ws.client.graphenej.models.Block;
 import com.gxchain.common.ws.client.graphenej.models.DynamicGlobalProperties;
@@ -64,4 +65,14 @@ public interface GxchainApiRestClient {
      * @return
      */
     Block getBlock(long blockHeight);
+
+    /**
+     * 查询oject
+     * 1.2.* 账号
+     * 1.3.* 资产
+     * 2.1.0 最新区块
+     * @param objectIds
+     * @return
+     */
+    JsonElement getObjects(List<String> objectIds);
 }

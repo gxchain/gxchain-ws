@@ -1,5 +1,6 @@
 package com.gxchain.common.ws.client.impl;
 
+import com.google.gson.JsonElement;
 import com.gxchain.common.ws.client.GxchainApiRestClient;
 import com.gxchain.common.ws.client.GxchainClientFactory;
 import com.gxchain.common.ws.client.graphenej.models.AccountProperties;
@@ -20,6 +21,7 @@ import static org.junit.Assert.*;
 @Slf4j
 public class GxchainApiRestClientImplTest {
     GxchainApiRestClient client = GxchainClientFactory.getInstance().newRestCLient("http://192.168.1.118:28090");
+
     @Test
     public void getChainId() throws Exception {
         log.info(client.getChainId());
@@ -31,17 +33,25 @@ public class GxchainApiRestClientImplTest {
     }
 
     @Test
-    public void getAccountBalance(){
+    public void getAccountBalance() {
         client.getAccountBalance("1.2.183027", Collections.EMPTY_LIST);
     }
+
     @Test
-    public void getAccountByName(){
+    public void getAccountByName() {
         AccountProperties accountProperties = client.getAccountByName("a111111111111");
         System.out.println(accountProperties);
     }
+
     @Test
-    public void getAccount(){
+    public void getAccount() {
         List<AccountProperties> accountProperties = client.getAccounts(Arrays.asList("1.2.515222"));
         System.out.println(accountProperties.size());
+    }
+
+    @Test
+    public void getObjects() {
+        JsonElement jsonElement = client.getObjects(Arrays.asList("2.1.0", "1.2.1", "1.3.1"));
+        System.out.println(jsonElement.toString());
     }
 }
