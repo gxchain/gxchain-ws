@@ -91,9 +91,6 @@ public class AccountOptions implements GrapheneSerializable {
         List<Byte> byteArray = new ArrayList<Byte>();
 
         if(memo_key != null){
-            // Adding byte to indicate that there is memo data
-            byteArray.add((byte) 1);
-
             // Adding memo key
             byteArray.addAll(Bytes.asList(memo_key.toBytes()));
 
