@@ -144,9 +144,6 @@ public class Authority implements GrapheneSerializable {
     @Override
     public byte[] toBytes() {
         List<Byte> byteArray = new ArrayList<Byte>();
-        // Adding number of authorities
-        byteArray.add(Byte.valueOf((byte) (account_auths.size() + key_auths.size())));
-
         // If the authority is not empty of references, we serialize its contents
         // otherwise its only contribution will be a zero byte
         if(account_auths.size() + key_auths.size() > 0){

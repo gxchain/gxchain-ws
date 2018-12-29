@@ -6,11 +6,11 @@
     <groupId>com.gxchain.common</groupId>
     <artifactId>ws-client</artifactId>
     <name>ws-client</name>
-    <version>1.0.7-RELEASE</version>
+    <version>1.0.8-RELEASE</version>
     <url>http://maven.apache.org</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <com.squareup.retrofit2.version>2.3.0</com.squareup.retrofit2.version>
+        <com.squareup.retrofit2.version>2.5.0</com.squareup.retrofit2.version>
     </properties>
 
     <dependencies>
@@ -63,6 +63,11 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.4</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.10</version>
         </dependency>
         <dependency>
             <groupId>joda-time</groupId>
@@ -118,8 +123,8 @@
     <distributionManagement>
         <repository>
             <id>nexus-releases</id>
-            <!--<url>https://repo.gxchain.cn/repository/maven-releases/</url>-->
-            <url>http://192.168.1.122:8081/repository/maven-releases/</url>
+            <url>https://repo.gxchain.cn/repository/maven-releases/</url>
+            <!--<url>http://192.168.1.122:8081/repository/maven-releases/</url>-->
         </repository>
         <snapshotRepository>
             <id>nexus-snapshots</id>
