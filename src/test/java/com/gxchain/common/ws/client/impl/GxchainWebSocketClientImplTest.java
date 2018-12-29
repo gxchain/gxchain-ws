@@ -120,7 +120,7 @@ public class GxchainWebSocketClientImplTest {
 
         System.out.println("交易体JSON：" + transaction.toJsonString());
         System.out.println("序列化：" + bytesToHexString(transaction.toBytes()));
-        client.broadcastTransaction(transaction);
+      //  client.broadcastTransaction(transaction);
     }
 
     @Test
@@ -158,7 +158,7 @@ public class GxchainWebSocketClientImplTest {
 
         System.out.println("交易体JSON：" + transaction.toJsonString());
         System.out.println("序列化：" + bytesToHexString(transaction.toBytes()));
-         client.broadcastTransaction(transaction);
+      //   client.broadcastTransaction(transaction);
     }
 
     public static final String bytesToHexString(byte[] bArray) {
